@@ -18,9 +18,17 @@ const ChennaiHome = () => {
   };
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/user/details", {
+    const email = localStorage.getItem("email");
+    if (!email) {
+      console.error("User email not found.");
+      return;
+    }
+
+    fetch("http://localhost:5000/api/getUserDetails", {
       method: "GET",
-      credentials: "include",
+      headers: {
+        "x-user-email": email,
+      },
     })
       .then((response) => response.json())
       .then((data) => setUserDetails(data))
@@ -45,7 +53,7 @@ const ChennaiHome = () => {
     });
 
   const handleRestaurantClick = (category) => {
-    navigate("/home/:city/menu", { state: { category } });
+    navigate("/home/chennai/menu", { state: { category } });
   };
 
   return (
@@ -92,7 +100,8 @@ const ChennaiHome = () => {
                 filteredRestaurants.map((restaurant) => (
                   <div
                     key={restaurant.id}
-                    className="bg-white/10 backdrop-blur-md text-white w-[300px] rounded-2xl p-5 shadow-lg border border-white/20 transition-transform hover:scale-110 hover:shadow-2xl"
+                    className="bg-white/10 backdrop-blur-md text-white w-[300px] rounded-2xl p-5 shadow-lg border border-white/20 transition-transform hover:scale-110 hover:shadow-2xl cursor-pointer"
+                    onClick={() => handleRestaurantClick(restaurant.category)}
                   >
                     <h2 className="text-xl font-bold mb-2">{restaurant.name}</h2>
                     <div className="text-sm space-y-1">
@@ -114,7 +123,9 @@ const ChennaiHome = () => {
                   </div>
                 ))
               ) : (
-                <p className="text-center text-white mt-4">No restaurants found</p>
+                <p className="text-center text-white mt-4">
+                  No restaurants found
+                </p>
               )}
             </div>
           </div>
