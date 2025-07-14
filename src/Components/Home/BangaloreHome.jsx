@@ -18,9 +18,17 @@ const BangaloreHome = () => {
   };
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/user/details", {
+    const email = localStorage.getItem("email"); // ✅ Or get from auth context
+    if (!email) {
+      console.error("User email not found.");
+      return;
+    }
+
+    fetch("http://localhost:5000/api/getUserDetails", {
       method: "GET",
-      credentials: "include",
+      headers: {
+        "x-user-email": email,
+      },
     })
       .then((response) => response.json())
       .then((data) => setUserDetails(data))
@@ -45,7 +53,7 @@ const BangaloreHome = () => {
     });
 
   const handleRestaurantClick = (category) => {
-    navigate("/home/:city/menu", { state: { category } });
+    navigate("/home/bangalore/menu", { state: { category } });
   };
 
   return (
@@ -101,14 +109,12 @@ const BangaloreHome = () => {
                       {restaurant.name}
                     </h2>
                     <div className="text-sm space-y-1">
-                    <p>📍 Address: {restaurant.address}</p>
+                      <p>📍 Address: {restaurant.address}</p>
                       <p>📞 Contact: {restaurant.phone}</p>
                       <p>📌 Location: {restaurant.location}</p>
                       <p>🍽 Cuisine: {restaurant.cuisines}</p>
                       <p>💰 Approx. Cost for Two: ₹{restaurant.approx_cost}</p>
-                      <p>
-                        ⭐ Rating: {restaurant.rate} ({restaurant.votes} votes)
-                      </p>
+                      <p>⭐ Rating: {restaurant.rate} ({restaurant.votes} votes)</p>
                       <p>🛵 Online Order: {restaurant.online_order}</p>
                       <p>📅 Table Booking: {restaurant.book_table}</p>
                       <p>🔝 Top Dish Liked: {restaurant.dish_liked}</p>
@@ -118,13 +124,12 @@ const BangaloreHome = () => {
                         {restaurant.listed_in_city}
                       </p>
                       <button
-                      onClick={() => handleRestaurantClick(restaurant.category)} // Pass category to MenuPage
-                      className="mt-3 bg-red-600 text-white p-2 rounded-lg"
-                    >
-                      View Menu
-                    </button>
-                  </div>
-                      
+                        onClick={() => handleRestaurantClick(restaurant.category)}
+                        className="mt-3 bg-red-600 text-white p-2 rounded-lg"
+                      >
+                        View Menu
+                      </button>
+                    </div>
                   </div>
                 ))
               ) : (
