@@ -3,7 +3,7 @@ import Navbar from "../navbar.jsx";
 import Sidebar from "../sidebar.jsx";
 import bgImage from "../../logos/bk5.jpg";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom"; // Import useNavigate for routing
+import { useNavigate } from "react-router-dom";
 
 const DelhiHome = () => {
   const [restaurants, setRestaurants] = useState([]);
@@ -11,16 +11,24 @@ const DelhiHome = () => {
   const [filter, setFilter] = useState("all");
   const [userDetails, setUserDetails] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const navigate = useNavigate(); // Initialize the navigate function
+  const navigate = useNavigate();
 
   const toggleSidebar = (value) => {
     setIsSidebarOpen(typeof value === "boolean" ? value : !isSidebarOpen);
   };
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/user/details", {
+    const email = localStorage.getItem("email"); // ✅ get saved email
+    if (!email) {
+      console.error("User email not found.");
+      return;
+    }
+
+    fetch("http://localhost:5000/api/getUserDetails", {
       method: "GET",
-      credentials: "include",
+      headers: {
+        "x-user-email": email,
+      },
     })
       .then((response) => response.json())
       .then((data) => setUserDetails(data))
@@ -45,24 +53,31 @@ const DelhiHome = () => {
     });
 
   const handleRestaurantClick = (category) => {
-    navigate("/home/:city/menu", { state: { category } }); // Navigate to MenuPage with category
+    navigate("/home/delhi/menu", { state: { category } });
   };
 
   return (
-    <div className="relative min-h-screen font-sans bg-cover bg-center bg-no-repeat bg-fixed"
-    style={{
-      backgroundImage: `url(${bgImage})`,
-    }}
+    <div
+      className="relative min-h-screen font-sans bg-cover bg-center bg-no-repeat bg-fixed"
+      style={{
+        backgroundImage: `url(${bgImage})`,
+      }}
     >
-      
-      {/* Overlay with blur */}
+      {/* Overlay */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-0" />
-      {/* Content wrapper on top of overlay */}
       <div className="relative z-10">
         <Navbar userDetails={userDetails} />
         <div className="flex">
-          <Sidebar onFilter={setFilter} isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-          <div className={`transition-all duration-300 px-4 pt-[70px] w-full ${isSidebarOpen ? "md:ml-72" : "ml-0"}`}>
+          <Sidebar
+            onFilter={setFilter}
+            isOpen={isSidebarOpen}
+            toggleSidebar={toggleSidebar}
+          />
+          <div
+            className={`transition-all duration-300 px-4 pt-[70px] w-full ${
+              isSidebarOpen ? "md:ml-72" : "ml-0"
+            }`}
+          >
             <motion.h1
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -71,6 +86,7 @@ const DelhiHome = () => {
             >
               Delhi Restaurants
             </motion.h1>
+
             <motion.input
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -81,12 +97,14 @@ const DelhiHome = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full max-w-xl mx-auto block text-center placeholder-white text-white text-lg font-medium border-2 border-white/30 rounded-xl bg-white/20 bg-opacity-40 px-4 py-3 my-6 focus:outline-none focus:ring-2 focus:ring-orange-400 transition"
             />
+
             <div className="flex flex-wrap justify-center gap-6 p-4">
               {filteredRestaurants.length > 0 ? (
                 filteredRestaurants.map((restaurant) => (
                   <div
                     key={restaurant.id}
-                    className="bg-white/10 backdrop-blur-md text-white w-[300px] rounded-2xl p-5 shadow-lg border border-white/20 transition-transform hover:scale-110 hover:shadow-2xl"
+                    className="bg-white/10 backdrop-blur-md text-white w-[300px] rounded-2xl p-5 shadow-lg border border-white/20 transition-transform hover:scale-110 hover:shadow-2xl cursor-pointer"
+                    onClick={() => handleRestaurantClick(restaurant.category)}
                   >
                     <h2 className="text-xl font-bold mb-2">{restaurant.name}</h2>
                     <div className="text-sm space-y-1">
@@ -99,7 +117,7 @@ const DelhiHome = () => {
                       <p>📞 Contact: {restaurant.phone_no}</p>
                     </div>
                     <button
-                      onClick={() => handleRestaurantClick(restaurant.category)} // Pass category to MenuPage
+                      onClick={() => handleRestaurantClick(restaurant.category)}
                       className="mt-3 bg-red-600 text-white p-2 rounded-lg"
                     >
                       View Menu
@@ -107,7 +125,9 @@ const DelhiHome = () => {
                   </div>
                 ))
               ) : (
-                <p className="text-center text-white mt-4">No restaurants found</p>
+                <p className="text-center text-white mt-4">
+                  No restaurants found
+                </p>
               )}
             </div>
           </div>
