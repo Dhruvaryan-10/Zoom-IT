@@ -1,12 +1,42 @@
-# React + Vite
+<h1>🍽️ Zoom-iT</h1>
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+<p><strong>Zoom-iT</strong> is a modern food discovery and ordering web application where users can explore city-wise restaurants, view menus, and place orders based on personal preferences and ratings.</p>
 
-Currently, two official plugins are available:
+<hr/>
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+<h2>🚀 Features</h2>
+<ul>
+  <li>🔐 User Authentication (Sign up / Login)</li>
+  <li>👤 User Info Collection (Address, DOB, etc.)</li>
+  <li>📍 City-based Restaurant Listings (Delhi, Mumbai, etc.)</li>
+  <li>🔍 Search and Filter Restaurants by Name, Rating, Distance</li>
+  <li>📄 View Menu and Restaurant Details</li>
+  <li>🛒 Place Orders with Payment Mode and Order Summary</li>
+  <li>📦 Responsive UI with Sidebar Navigation and Framer Motion</li>
+</ul>
 
-## Expanding the ESLint configuration
+<hr/>
 
-If you are developing a production application, we recommend using TypeScript and enable type-aware lint rules. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+<h2>🛠️ Tech Stack</h2>
+<ul>
+  <li><strong>Frontend:</strong> React.js, Tailwind CSS, Framer Motion</li>
+  <li><strong>Backend:</strong> Node.js, Express.js</li>
+  <li><strong>Database:</strong> PostgreSQL</li>
+</ul>
+
+<hr/>
+
+<h2>🗂️ Folder Structure</h2>
+<pre>
+Zoom-iT/
+├── client/            # React Frontend
+│   ├── components/
+│   ├── pages/
+│   └── App.jsx
+├── dbms/              # Node.js + Express Backend
+│   ├── server.js
+│   └── db.js
+└── README.md
+</pre>
+
+<hr/>
