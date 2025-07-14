@@ -18,9 +18,17 @@ const KolkataHome = () => {
   };
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/user/details", {
+    const email = localStorage.getItem("email");
+    if (!email) {
+      console.error("User email not found.");
+      return;
+    }
+
+    fetch("http://localhost:5000/api/getUserDetails", {
       method: "GET",
-      credentials: "include",
+      headers: {
+        "x-user-email": email,
+      },
     })
       .then((response) => response.json())
       .then((data) => setUserDetails(data))
@@ -41,13 +49,13 @@ const KolkataHome = () => {
       restaurant.name.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .filter((restaurant) => {
-      if (filter === "highest") return restaurant.dining_rating >= 4.5;
+      if (filter === "highest") return restaurant.rating >= 4.5;
       if (filter === "nearest") return restaurant.distance <= 5;
       return true;
     });
 
   const handleRestaurantClick = (category) => {
-    navigate("/home/:city/menu", { state: { category } });
+    navigate("/home/kolkata/menu", { state: { category } });
   };
 
   return (
@@ -99,13 +107,16 @@ const KolkataHome = () => {
                 filteredRestaurants.map((restaurant) => (
                   <div
                     key={restaurant.id}
-                    className="bg-white/10 backdrop-blur-md text-white w-[300px] rounded-2xl p-5 shadow-lg border border-white/20 transition-transform hover:scale-110 hover:shadow-2xl"
+                    className="bg-white/10 backdrop-blur-md text-white w-[300px] rounded-2xl p-5 shadow-lg border border-white/20 transition-transform hover:scale-110 hover:shadow-2xl cursor-pointer"
+                    onClick={() =>
+                      handleRestaurantClick(restaurant.category)
+                    }
                   >
                     <h2 className="text-xl font-bold mb-2">
                       {restaurant.name}
                     </h2>
                     <div className="text-sm space-y-1">
-                    <p>
+                      <p>
                         ⭐ Rating: {restaurant.rating} (
                         {restaurant.vote_count} votes)
                       </p>
