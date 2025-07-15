@@ -1,66 +1,126 @@
-import pymysql
 import pandas as pd
-import numpy as np
+import psycopg2
 
-# File path for the CSV
-file_path = r"C:\Users\chugh\Desktop\Zoom-iT\dbms\src\assets\DelhiRestaurants.csv"
+# === File Path ===
+csv_file = r'C:\Users\chugh\Desktop\Zoom-iT\dbms\assets\Bengalorerestaurants.csv'
 
-# Read the CSV data into a pandas DataFrame
-df = pd.read_csv(file_path)
+# === Step 1: Load Data ===
+try:
+    df = pd.read_csv(csv_file, delimiter=',', encoding='latin1', low_memory=False)
+    print("✅ CSV file loaded")
+except Exception as e:
+    print(f"❌ Failed to read CSV: {e}")
+    exit()
 
-# Print columns to check for any discrepancies
-print("Columns in DataFrame:", df.columns)
+# === Step 2: Clean Column Names ===
+df.columns = df.columns.str.strip()  # remove whitespace or \n from column names
 
-# Clean any leading or trailing spaces in column names
-df.columns = df.columns.str.strip()
+# === Step 3: Rename Columns to Match PostgreSQL Field Names ===
+df.rename(columns={
+    'listed_in(type)': 'listed_in_type',
+    'listed_in(city)': 'listed_in_city',
+    'approx_cost(for two people)': 'approx_cost'  # Adjust this based on actual CSV column name
+}, inplace=True)
 
-# Replace NaN values with None for all numeric columns
-df = df.apply(lambda x: x.where(pd.notnull(x), None) if x.dtype.kind in 'fi' else x)
+# === Step 4: Filter and Clean Data ===
+try:
+    df_clean = df[
+        df['name'].notna() &
+        df['address'].notna() &
+        df['location'].notna() &
+        ~df['name'].astype(str).str.contains("Ã", na=False) &
+        ~df['address'].astype(str).str.contains("Ã", na=False) &
+        ~df['reviews_list'].astype(str).str.contains("Ã", na=False) &
+        df['rate'].astype(str).str.match(r'^[0-9.]+/?5?$', na=False) &
+        df['approx_cost'].astype(str).str.match(r'^[0-9,]+$', na=False) &
+        df['name'].astype(str).str.len() < 100
+    ]
+    df_clean = df_clean.head(15000)
+    print("✅ Data cleaned and filtered")
+except Exception as filter_err:
+    print(f"❌ Error during filtering: {filter_err}")
+    exit()
 
-# Handle NaN in non-numeric columns
-df['Restaurant_Name'] = df['Restaurant_Name'].fillna('')  # Correct column name 'Restaurant_Name'
-df['Category'] = df['Category'].fillna('')
-
-# Mapping categories to menu_template_id
-category_to_id = {
-    "North Indian": 1,
-    "Chinese": 2,
-    "Italian": 3,
-    "Fast Food": 4,
-    "Mexican": 5,
-    "Continental": 6
-}
-
-# Add menu_template_id column based on the category
-df["menu_template_id"] = df["Category"].map(category_to_id)
-
-# Database connection
-conn = pymysql.connect(host="localhost", user="root", password="24June1987", database="dbms")
-cursor = conn.cursor()
-
-# Loop through each row and update the menu_template_id in the Restaurants table
-for _, row in df.iterrows():
-    # Replace NaN values with None for SQL compatibility
-    values = (
-        row['menu_template_id'],  # menu_template_id
-        row['Restaurant_Name'],    # Restaurant_Name (correct column)
-        row['Category']            # category
+# === Step 5: PostgreSQL Connection ===
+try:
+    conn = psycopg2.connect(
+        host="localhost",
+        database="zoomit",
+        user="postgres",
+        password="24June1987"  # Replace this with a secure password in production
     )
+    cursor = conn.cursor()
+    print("✅ Connected to PostgreSQL")
 
-    # Ensure the SQL query has the right placeholders (%s)
-    sql = """UPDATE Restaurants 
-             SET menu_template_id = %s 
-             WHERE name = %s AND category = %s"""  # Corrected column 'name' to 'Restaurant_Name'
-    
-    try:
-        cursor.execute(sql, values)
-    except pymysql.MySQLError as e:
-        print(f"Error executing SQL for row {row['Restaurant_Name']}: {e}")
-        continue
+    # === Step 6: Create 'bangalore' Table ===
+    cursor.execute('''
+        DROP TABLE IF EXISTS bangalore;
+        CREATE TABLE bangalore (
+            id SERIAL PRIMARY KEY,
+            url TEXT,
+            address TEXT,
+            name TEXT,
+            online_order TEXT,
+            book_table TEXT,
+            rate TEXT,
+            votes TEXT,
+            phone TEXT,
+            location TEXT,
+            rest_type TEXT,
+            dish_liked TEXT,
+            cuisines TEXT,
+            approx_cost TEXT,
+            reviews_list TEXT,
+            menu_item TEXT,
+            listed_in_type TEXT,
+            listed_in_city TEXT
+        );
+    ''')
+    conn.commit()
+    print("✅ Table 'bangalore' created")
 
-# Commit the transaction and close the cursor and connection
-conn.commit()
-cursor.close()
-conn.close()
+    # === Step 7: Insert Data ===
+    success_count = 0
+    for index, row in df_clean.iterrows():
+        try:
+            cursor.execute('''
+                INSERT INTO bangalore (
+                    url, address, name, online_order, book_table, rate, votes, phone,
+                    location, rest_type, dish_liked, cuisines, approx_cost,
+                    reviews_list, menu_item, listed_in_type, listed_in_city
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ''', (
+                str(row.get('url', '')).strip(),
+                str(row.get('address', '')).strip(),
+                str(row.get('name', '')).strip(),
+                str(row.get('online_order', '')).strip(),
+                str(row.get('book_table', '')).strip(),
+                str(row.get('rate', '')).strip(),
+                str(row.get('votes', '')).strip(),
+                str(row.get('phone', '')).strip(),
+                str(row.get('location', '')).strip(),
+                str(row.get('rest_type', '')).strip(),
+                str(row.get('dish_liked', '')).strip(),
+                str(row.get('cuisines', '')).strip(),
+                str(row.get('approx_cost', '')).strip(),
+                str(row.get('reviews_list', '')).strip(),
+                str(row.get('menu_item', '')).strip(),
+                str(row.get('listed_in_type', '')).strip(),
+                str(row.get('listed_in_city', '')).strip()
+            ))
+            success_count += 1
+        except Exception as row_err:
+            print(f"⚠️ Row {index + 1} skipped: {row_err}")
 
-print("menu_template_id values updated successfully.")
+    conn.commit()
+    print(f"✅ Inserted {success_count} records into 'bangalore' table")
+
+except Exception as e:
+    print(f"❌ Database error: {e}")
+
+finally:
+    if 'cursor' in locals():
+        cursor.close()
+    if 'conn' in locals():
+        conn.close()
+        print("🔒 Connection closed")

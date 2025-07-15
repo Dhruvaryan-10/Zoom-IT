@@ -70,12 +70,15 @@ app.post("/api/saveUserInfo", async (req, res) => {
   if (!email) return res.status(400).send("Email is required");
 
   try {
-    await pool.query("INSERT INTO users (email) VALUES ($1) ON CONFLICT DO NOTHING", [email]);
+    const userResult = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
+    if (userResult.rows.length === 0) return res.status(404).send("User not found");
+
+    const userId = userResult.rows[0].id;
 
     await pool.query(
-      `INSERT INTO user_info (email, first_name, last_name, dob, address, pincode, address_type)
+      `INSERT INTO user_info (user_id, first_name, last_name, dob, address, pincode, address_type)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
-       ON CONFLICT (email)
+       ON CONFLICT (user_id)
        DO UPDATE SET
          first_name = EXCLUDED.first_name,
          last_name = EXCLUDED.last_name,
@@ -83,7 +86,7 @@ app.post("/api/saveUserInfo", async (req, res) => {
          address = EXCLUDED.address,
          pincode = EXCLUDED.pincode,
          address_type = EXCLUDED.address_type`,
-      [email, firstName, lastName, dob, address, pincode, addressType]
+      [userId, firstName, lastName, dob, address, pincode, addressType]
     );
 
     res.send("User info saved successfully");
@@ -99,20 +102,24 @@ app.get("/api/getUserDetails", async (req, res) => {
   if (!email) return res.status(400).send("Email header is required");
 
   try {
+    const userResult = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
+    if (userResult.rows.length === 0) return res.status(404).send("User not found");
+
+    const userId = userResult.rows[0].id;
+
     const result = await pool.query(
-      `SELECT CONCAT(first_name, ' ', last_name) AS name, address FROM user_info WHERE email = $1`,
-      [email]
+      `SELECT CONCAT(first_name, ' ', last_name) AS name, address FROM user_info WHERE user_id = $1`,
+      [userId]
     );
 
     if (result.rows.length > 0) res.json(result.rows[0]);
-    else res.status(404).send("User not found");
+    else res.status(404).send("User info not found");
   } catch (err) {
     console.error("Database error:", err);
     res.status(500).json({ message: "Database error" });
   }
 });
 
-// 🌆 City Restaurant Fetch
 app.get("/api/home/:city", async (req, res) => {
   const city = req.params.city.toLowerCase();
   const validCities = ["delhi", "kolkata", "chennai", "bangalore", "mumbai"];
@@ -122,17 +129,14 @@ app.get("/api/home/:city", async (req, res) => {
   }
 
   try {
-    const query =
-      city === "delhi"
-        ? "SELECT * FROM Restaurants WHERE locality ILIKE '%Delhi%'"
-        : `SELECT * FROM ${city}`;
-    const result = await pool.query(query);
+    const result = await pool.query(`SELECT * FROM ${city}`);
     res.json(result.rows);
   } catch (err) {
     console.error("DB error:", err);
     res.status(500).json({ message: "DB error" });
   }
 });
+
 
 // 🍽️ Menu Items
 app.get("/api/menu-items", async (req, res) => {
@@ -156,17 +160,25 @@ app.post("/api/placeOrder", async (req, res) => {
   try {
     await client.query("BEGIN");
 
-    const userRes = await client.query(
-      `SELECT CONCAT(first_name, ' ', last_name) AS user_name, address FROM user_info WHERE email = $1`,
-      [email]
-    );
-
-    if (userRes.rows.length === 0) {
+    const userResult = await client.query("SELECT id FROM users WHERE email = $1", [email]);
+    if (userResult.rows.length === 0) {
       await client.query("ROLLBACK");
       return res.status(400).json({ message: "User not found" });
     }
 
-    const { user_name, address } = userRes.rows[0];
+    const userId = userResult.rows[0].id;
+
+    const infoRes = await client.query(
+      `SELECT CONCAT(first_name, ' ', last_name) AS user_name, address FROM user_info WHERE user_id = $1`,
+      [userId]
+    );
+
+    if (infoRes.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ message: "User info not found" });
+    }
+
+    const { user_name, address } = infoRes.rows[0];
 
     await client.query(
       `INSERT INTO orders (email, user_name, address, order_list, payment_mode, total_price)

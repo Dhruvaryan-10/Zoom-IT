@@ -18,7 +18,7 @@ const DelhiHome = () => {
   };
 
   useEffect(() => {
-    const email = localStorage.getItem("email"); // ✅ get saved email
+    const email = localStorage.getItem("email");
     if (!email) {
       console.error("User email not found.");
       return;
@@ -38,19 +38,31 @@ const DelhiHome = () => {
   useEffect(() => {
     fetch("http://localhost:5000/api/home/delhi")
       .then((response) => response.json())
-      .then((data) => setRestaurants(data))
-      .catch((error) => console.error("Error fetching restaurant data:", error));
+      .then((data) => {
+        console.log("Fetched data:", data); // Debug log
+        setRestaurants(data);
+      })
+      .catch((error) =>
+        console.error("Error fetching restaurant data:", error)
+      );
   }, []);
 
-  const filteredRestaurants = restaurants
-    .filter((restaurant) =>
-      restaurant.name.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .filter((restaurant) => {
-      if (filter === "highest") return restaurant.dining_rating >= 4.5;
-      if (filter === "nearest") return restaurant.distance <= 5;
-      return true;
-    });
+  const filteredRestaurants = Array.isArray(restaurants)
+    ? restaurants
+        .filter(
+          (restaurant) =>
+            restaurant &&
+            typeof restaurant.restaurant_name === "string" &&
+            restaurant.restaurant_name
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase())
+        )
+        .filter((restaurant) => {
+          if (filter === "highest") return restaurant.dining_rating >= 4.5;
+          if (filter === "nearest") return restaurant.distance <= 5;
+          return true;
+        })
+    : [];
 
   const handleRestaurantClick = (category) => {
     navigate("/home/delhi/menu", { state: { category } });
@@ -104,9 +116,13 @@ const DelhiHome = () => {
                   <div
                     key={restaurant.id}
                     className="bg-white/10 backdrop-blur-md text-white w-[300px] rounded-2xl p-5 shadow-lg border border-white/20 transition-transform hover:scale-110 hover:shadow-2xl cursor-pointer"
-                    onClick={() => handleRestaurantClick(restaurant.category)}
+                    onClick={() =>
+                      handleRestaurantClick(restaurant.category)
+                    }
                   >
-                    <h2 className="text-xl font-bold mb-2">{restaurant.name}</h2>
+                    <h2 className="text-xl font-bold mb-2">
+                      {restaurant.restaurant_name}
+                    </h2>
                     <div className="text-sm space-y-1">
                       <p>🍽️ Category: {restaurant.category}</p>
                       <p>💸 Price for 2: ₹{restaurant.pricing_for_2}</p>
@@ -117,7 +133,9 @@ const DelhiHome = () => {
                       <p>📞 Contact: {restaurant.phone_no}</p>
                     </div>
                     <button
-                      onClick={() => handleRestaurantClick(restaurant.category)}
+                      onClick={() =>
+                        handleRestaurantClick(restaurant.category)
+                      }
                       className="mt-3 bg-red-600 text-white p-2 rounded-lg"
                     >
                       View Menu

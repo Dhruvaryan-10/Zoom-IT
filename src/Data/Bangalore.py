@@ -2,12 +2,12 @@ import pandas as pd
 import psycopg2
 from psycopg2 import sql
 
-# Load only the first 2000 rows with proper encoding
+# Load the entire CSV without limiting the number of rows
 csv_file = r'C:\Users\chugh\Desktop\Zoom-iT\dbms\assets\Bengalorerestaurants.csv'
-df_sample = pd.read_csv(csv_file, delimiter=',', nrows=2000, encoding='latin1')
+df_full = pd.read_csv(csv_file, delimiter=',', encoding='latin1')
 
-# Rename columns if needed to match DB field names
-df_sample = df_sample.rename(columns={
+# Rename columns to match DB field names
+df_full = df_full.rename(columns={
     'listed_in(type)': 'listed_in_type',
     'listed_in(city)': 'listed_in_city'
 })
@@ -18,7 +18,7 @@ try:
         host="localhost",
         database="zoomit",
         user="postgres",
-        password="24June1987"  # Replace with your actual PostgreSQL password
+        password="24June1987"  # 🔐 Replace with your actual password if needed
     )
     cursor = conn.cursor()
     print("✅ Connected to PostgreSQL")
@@ -50,7 +50,7 @@ try:
     print("✅ Table 'bangalore' is ready")
 
     # Insert each row safely
-    for index, row in df_sample.iterrows():
+    for index, row in df_full.iterrows():
         try:
             cursor.execute('''
                 INSERT INTO bangalore (
@@ -81,7 +81,7 @@ try:
             print(f"⚠️ Skipped row {index + 1} due to error: {row_err}")
 
     conn.commit()
-    print("✅ Successfully inserted first 2000 records into 'bangalore' table")
+    print(f"✅ Successfully inserted {len(df_full)} records into 'bangalore' table")
 
 except Exception as e:
     print("❌ Error:", e)
