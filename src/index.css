@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.zoom-gradient {
+  background: linear-gradient(
+    270deg,
+    #ff3b30,
+    #ff7a18,
+    #fff6f2,
+    #ff3b30
+  );
+  background-size: 600% 600%;
+  animation: gradientMove 12s ease infinite;
+
+}
+@keyframes slowZoom {
+  0% { transform: scale(1.05); }
+  50% { transform: scale(1.12); }
+  100% { transform: scale(1.05); }
+}
+
+.animate-slowZoom {
+  animation: slowZoom 25s ease-in-out infinite;
+}
+@keyframes slowZoom {
+  0% { transform: scale(1.05); }
+  50% { transform: scale(1.12); }
+  100% { transform: scale(1.05); }
+}
+
+.animate-slowZoom {
+  animation: slowZoom 25s ease-in-out infinite;
+}

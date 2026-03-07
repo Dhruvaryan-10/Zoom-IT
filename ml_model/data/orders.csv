@@ -1,0 +1,43 @@
+user_id,restaurant_id,cuisine,rating_given,order_count
+U001,1,North Indian,5,3
+U001,2,South Indian,4,2
+U001,3,Mughlai,5,1
+U002,4,Asian,5,2
+U002,5,Continental,4,3
+U002,6,South Indian,4,1
+U003,7,Nepalese,4,1
+U003,8,Ice Cream,5,2
+U004,9,Ice Cream,5,3
+U004,10,South Indian,4,2
+U005,11,North Indian,5,2
+U005,12,Vietnamese,4,1
+U006,13,Cafe,4,3
+U006,14,South Indian,5,2
+U007,15,Mangalorean,5,2
+U007,16,Asian,4,1
+U008,17,Continental,5,2
+U008,18,Fast Food,4,1
+U009,19,Italian,5,3
+U009,20,Bakery,5,1
+U010,1,North Indian,4,1
+U010,4,Asian,5,1
+U011,5,Continental,3,1
+U011,6,South Indian,5,1
+U012,8,Ice Cream,5,2
+U012,10,South Indian,4,2
+U013,11,North Indian,5,2
+U013,13,Cafe,4,1
+U014,14,South Indian,5,1
+U014,17,Continental,4,1
+U015,18,Fast Food,4,2
+U015,19,Italian,5,1
+U016,2,South Indian,4,2
+U016,3,Mughlai,5,1
+U017,5,Continental,5,2
+U017,6,South Indian,4,1
+U018,7,Nepalese,3,1
+U018,8,Ice Cream,5,2
+U019,9,Ice Cream,4,3
+U019,10,South Indian,5,2
+U020,11,North Indian,5,2
+U020,13,Cafe,4,1
