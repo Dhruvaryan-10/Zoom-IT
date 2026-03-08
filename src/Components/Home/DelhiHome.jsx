@@ -129,7 +129,14 @@ const DelhiHome = () => {
   useEffect(() => {
     fetch("https://zoom-it-m6d0.onrender.com/api/home/delhi")
       .then((res) => res.json())
-      .then((data) => setRestaurants(data || []))
+      .then((data) => {
+  if (Array.isArray(data)) {
+    setRestaurants(data);
+  } else {
+    console.error("Invalid restaurant data:", data);
+    setRestaurants([]);
+  }
+})
       .catch(console.error);
   }, []);
 

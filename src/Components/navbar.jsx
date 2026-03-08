@@ -15,35 +15,46 @@ const Navbar = ({ onChangeAddress, onLogout }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchUserDetails = async () => {
-      try {
-        const storedEmail = localStorage.getItem("email");
-        if (!storedEmail) return;
+  const fetchUserDetails = async () => {
+    try {
+      const storedEmail = localStorage.getItem("email");
 
-        const res = await fetch("https://zoom-it-m6d0.onrender.com/api/getUserDetails", {
+      // Stop request if user not logged in
+      if (!storedEmail) return;
+
+      const res = await fetch(
+        "https://zoom-it-m6d0.onrender.com/api/getUserDetails",
+        {
           headers: {
             "x-user-email": storedEmail,
           },
-        });
-
-        const data = await res.json();
-
-        if (res.ok) {
-          const [first_name = "", last_name = ""] = (data.name || "").split(" ");
-          setUserDetails({
-            first_name,
-            last_name,
-            address: data.address || "",
-          });
         }
-      } catch (err) {
-        console.error("Error fetching user details:", err);
+      );
+
+      // If server error
+      if (!res.ok) {
+        console.warn("User details fetch failed:", res.status);
+        return;
       }
-    };
 
-    fetchUserDetails();
-  }, []);
+      const data = await res.json();
 
+      const [first_name = "", last_name = ""] =
+        (data?.name || "").split(" ");
+
+      setUserDetails({
+        first_name,
+        last_name,
+        address: data?.address || "",
+      });
+
+    } catch (err) {
+      console.error("Error fetching user details:", err);
+    }
+  };
+
+  fetchUserDetails();
+}, []);
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
