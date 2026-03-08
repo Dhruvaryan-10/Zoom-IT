@@ -10,20 +10,20 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 /* -------------------------------------------------------------------------- */
-/*                                 CORS                                       */
+/*                                   CORS                                     */
 /* -------------------------------------------------------------------------- */
 
 app.use(
   cors({
     origin: true,
     credentials: true,
-  }),
+  })
 );
 
 app.use(express.json());
 
 /* -------------------------------------------------------------------------- */
-/*                              HEALTH CHECK                                  */
+/*                               HEALTH CHECK                                 */
 /* -------------------------------------------------------------------------- */
 
 app.get("/", (req, res) => {
@@ -31,7 +31,7 @@ app.get("/", (req, res) => {
 });
 
 /* -------------------------------------------------------------------------- */
-/*                         CUISINE → TEMPLATE MAP                             */
+/*                       CUISINE → TEMPLATE MAP                               */
 /* -------------------------------------------------------------------------- */
 
 const CUISINE_TO_TEMPLATE_MAP = {
@@ -65,7 +65,7 @@ const CUISINE_TO_TEMPLATE_MAP = {
 };
 
 /* -------------------------------------------------------------------------- */
-/*                                 SIGNUP                                     */
+/*                                  SIGNUP                                    */
 /* -------------------------------------------------------------------------- */
 
 app.post("/api/signup", async (req, res) => {
@@ -75,9 +75,10 @@ app.post("/api/signup", async (req, res) => {
     if (!username || !email || !password)
       return res.status(400).json({ message: "All fields required." });
 
-    const existing = await pool.query("SELECT id FROM users WHERE email=$1", [
-      email,
-    ]);
+    const existing = await pool.query(
+      "SELECT id FROM users WHERE email=$1",
+      [email]
+    );
 
     if (existing.rows.length)
       return res.status(409).json({ message: "Email already exists." });
@@ -86,7 +87,7 @@ app.post("/api/signup", async (req, res) => {
 
     const result = await pool.query(
       "INSERT INTO users (username,email,password) VALUES ($1,$2,$3) RETURNING id",
-      [username, email, hashedPassword],
+      [username, email, hashedPassword]
     );
 
     res.status(201).json({
@@ -94,22 +95,23 @@ app.post("/api/signup", async (req, res) => {
       user: { id: result.rows[0].id, username, email },
     });
   } catch (err) {
-    console.error("Signup error:", err);
+    console.error("SIGNUP ERROR:", err);
     res.status(500).json({ message: "Server error." });
   }
 });
 
 /* -------------------------------------------------------------------------- */
-/*                                  LOGIN                                     */
+/*                                   LOGIN                                    */
 /* -------------------------------------------------------------------------- */
 
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const result = await pool.query("SELECT * FROM users WHERE email=$1", [
-      email,
-    ]);
+    const result = await pool.query(
+      "SELECT * FROM users WHERE email=$1",
+      [email]
+    );
 
     if (!result.rows.length)
       return res.status(401).json({ message: "User not found." });
@@ -118,57 +120,49 @@ app.post("/api/login", async (req, res) => {
 
     const match = await bcrypt.compare(password, user.password);
 
-    if (!match) return res.status(401).json({ message: "Invalid password." });
+    if (!match)
+      return res.status(401).json({ message: "Invalid password." });
 
     res.json({
       message: "Login successful",
       user: { id: user.id, email: user.email, username: user.username },
     });
+
   } catch (err) {
-    console.error("Login error:", err);
+    console.error("LOGIN ERROR:", err);
     res.status(500).json({ message: "Server error." });
   }
 });
 
 /* -------------------------------------------------------------------------- */
-/*                           GET USER DETAILS                                 */
+/*                             GET USER DETAILS                               */
 /* -------------------------------------------------------------------------- */
 
 app.get("/api/getUserDetails", async (req, res) => {
   try {
+
     const email = req.headers["x-user-email"];
 
-    if (!email) {
-      return res.json({
-        name: "User",
-        address: "",
-      });
-    }
+    if (!email)
+      return res.json({ name: "User", address: "" });
 
-    const user = await pool.query("SELECT id FROM users WHERE email=$1", [
-      email,
-    ]);
+    const user = await pool.query(
+      "SELECT id FROM users WHERE email=$1",
+      [email]
+    );
 
-    if (!user.rows.length) {
-      return res.json({
-        name: "User",
-        address: "",
-      });
-    }
+    if (!user.rows.length)
+      return res.json({ name: "User", address: "" });
 
     const userId = user.rows[0].id;
 
     const info = await pool.query(
       "SELECT first_name,last_name,address FROM user_info WHERE user_id=$1",
-      [userId],
+      [userId]
     );
 
-    if (!info.rows.length) {
-      return res.json({
-        name: "User",
-        address: "",
-      });
-    }
+    if (!info.rows.length)
+      return res.json({ name: "User", address: "" });
 
     const row = info.rows[0];
 
@@ -176,21 +170,20 @@ app.get("/api/getUserDetails", async (req, res) => {
       name: `${row.first_name || ""} ${row.last_name || ""}`.trim(),
       address: row.address || "",
     });
+
   } catch (err) {
     console.error("USER DETAILS ERROR:", err);
-
-    res.json({
-      name: "User",
-      address: "",
-    });
+    res.json({ name: "User", address: "" });
   }
 });
+
 /* -------------------------------------------------------------------------- */
-/*                          CITY RESTAURANTS                                  */
+/*                            CITY RESTAURANTS                                */
 /* -------------------------------------------------------------------------- */
 
 app.get("/api/home/:city", async (req, res) => {
   try {
+
     const city = req.params.city.toLowerCase();
 
     const tableMap = {
@@ -203,17 +196,15 @@ app.get("/api/home/:city", async (req, res) => {
 
     const table = tableMap[city];
 
-    if (!table) {
+    if (!table)
       return res.status(400).json({ message: "Invalid city" });
-    }
 
-    const result = await pool.query(`SELECT * FROM ${table}`);
-
-    if (!result.rows || result.rows.length === 0) {
-      return res.json([]);
-    }
+    const result = await pool.query(
+      `SELECT * FROM ${table} LIMIT 1000`
+    );
 
     const processedRows = result.rows.map((restaurant) => {
+
       const rawCuisine =
         restaurant.category ||
         restaurant.cuisine ||
@@ -237,25 +228,30 @@ app.get("/api/home/:city", async (req, res) => {
         ...restaurant,
         template_id: templateId,
       };
+
     });
 
     res.json(processedRows);
+
   } catch (err) {
+
     console.error("HOME API ERROR:", err);
 
     res.status(500).json({
       message: "DB error",
       error: err.message,
     });
+
   }
 });
 
 /* -------------------------------------------------------------------------- */
-/*                           MENU ITEMS                                       */
+/*                               MENU ITEMS                                   */
 /* -------------------------------------------------------------------------- */
 
 app.get("/api/menu-items", async (req, res) => {
   try {
+
     const templateId = req.query.template_id;
 
     if (!templateId)
@@ -265,16 +261,25 @@ app.get("/api/menu-items", async (req, res) => {
       `SELECT * FROM menu_items
        WHERE template_id=$1
        ORDER BY category,item_name`,
-      [templateId],
+      [templateId]
     );
 
     res.json(result.rows);
+
   } catch (err) {
-    console.error("Menu fetch error:", err);
-    res.status(500).json({ error: "Menu fetch failed" });
+
+    console.error("MENU FETCH ERROR:", err);
+
+    res.status(500).json({
+      error: "Menu fetch failed",
+      details: err.message
+    });
+
   }
 });
 
+/* -------------------------------------------------------------------------- */
+/*                                SERVER                                      */
 /* -------------------------------------------------------------------------- */
 
 app.listen(PORT, () => {
