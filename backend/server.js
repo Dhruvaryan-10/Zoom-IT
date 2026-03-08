@@ -279,6 +279,74 @@ app.get("/api/menu-items", async (req, res) => {
 });
 
 /* -------------------------------------------------------------------------- */
+/*                                PLACE ORDER                                 */
+/* -------------------------------------------------------------------------- */
+
+app.post("/api/placeOrder", async (req, res) => {
+  try {
+
+    const { email, orderList, paymentMode, totalPrice } = req.body;
+
+    if (!email || !orderList || !paymentMode || !totalPrice) {
+      return res.status(400).json({ message: "Missing order fields" });
+    }
+
+    const user = await pool.query(
+      "SELECT id FROM users WHERE email=$1",
+      [email]
+    );
+
+    if (!user.rows.length) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const userId = user.rows[0].id;
+
+    const info = await pool.query(
+      "SELECT first_name,last_name,address FROM user_info WHERE user_id=$1",
+      [userId]
+    );
+
+    const name =
+      info.rows.length
+        ? `${info.rows[0].first_name} ${info.rows[0].last_name}`
+        : "User";
+
+    const address =
+      info.rows.length
+        ? info.rows[0].address
+        : "Address not set";
+
+    await pool.query(
+      `INSERT INTO orders
+      (email,user_name,address,order_list,payment_mode,total_price)
+      VALUES ($1,$2,$3,$4,$5,$6)`,
+      [
+        email,
+        name,
+        address,
+        JSON.stringify(orderList),
+        paymentMode,
+        totalPrice
+      ]
+    );
+
+    res.json({
+      message: "Order placed successfully"
+    });
+
+  } catch (err) {
+
+    console.error("ORDER ERROR:", err);
+
+    res.status(500).json({
+      message: "Order failed",
+      error: err.message
+    });
+
+  }
+});
+/* -------------------------------------------------------------------------- */
 /*                                SERVER                                      */
 /* -------------------------------------------------------------------------- */
 
