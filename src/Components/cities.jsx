@@ -29,7 +29,7 @@ const Cities = () => {
     const email = localStorage.getItem("email");
 
     if (email) {
-      fetch("http://localhost:5000/api/getUserDetails", {
+      fetch("https://zoom-it-m6d0.onrender.com/api/getUserDetails", {
         headers: { "x-user-email": email },
       })
         .then((res) => res.json())

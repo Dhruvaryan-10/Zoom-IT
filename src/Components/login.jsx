@@ -130,8 +130,8 @@ const AuthForm = ({ view, setView, setLoggedInEmail }) => {
 
     const url =
       view === "login"
-        ? "http://localhost:5000/api/login"
-        : "http://localhost:5000/api/signup";
+        ? "https://zoom-it-m6d0.onrender.com/api/login"
+        : "https://zoom-it-m6d0.onrender.com/api/signup";
 
     try {
 
@@ -247,7 +247,7 @@ const OAuthButtons = ({ setLoggedInEmail }) => {
 
       const user = jwtDecode(credentialResponse.credential);
 
-      const res = await fetch("http://localhost:5000/api/googleLogin", {
+      const res = await fetch("https://zoom-it-m6d0.onrender.com/api/googleLogin", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

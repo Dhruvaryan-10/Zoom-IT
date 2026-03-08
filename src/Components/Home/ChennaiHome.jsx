@@ -75,7 +75,7 @@ const ChennaiHome = () => {
     const email = localStorage.getItem("email");
     if (!email) return;
 
-    fetch("http://localhost:5000/api/getUserDetails", {
+    fetch("https://zoom-it-m6d0.onrender.com/api/getUserDetails", {
       headers: { "x-user-email": email },
     })
       .then((res) => res.json())
@@ -86,7 +86,7 @@ const ChennaiHome = () => {
   /* ---------- RESTAURANTS ---------- */
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/home/chennai")
+    fetch("https://zoom-it-m6d0.onrender.com/api/home/chennai")
       .then((res) => res.json())
       .then((data) => setRestaurants(data || []))
       .catch(console.error);

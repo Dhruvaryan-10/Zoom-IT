@@ -9,7 +9,15 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors({ origin: "http://localhost:5174", credentials: true }));
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5174",
+      "https://zoom-it.vercel.app"
+    ],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 /* -------------------------------------------------------------------------- */
@@ -198,43 +206,45 @@ app.post("/api/saveUserInfo", async (req, res) => {
 /* -------------------------------------------------------------------------- */
 
 app.get("/api/getUserDetails", async (req, res) => {
-
-  const email = req.headers["x-user-email"];
-
-  if (!email) return res.status(400).send("Email header is required");
-
   try {
+    const email = req.headers["x-user-email"];
+
+    if (!email) {
+      return res.status(400).json({ message: "Email header missing" });
+    }
 
     const userResult = await pool.query(
-      "SELECT id FROM users WHERE email=$1",
+      "SELECT id FROM users WHERE email = $1",
       [email]
     );
 
-    if (userResult.rows.length === 0)
-      return res.status(404).send("User not found");
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     const userId = userResult.rows[0].id;
 
     const result = await pool.query(
-      `SELECT CONCAT(first_name,' ',last_name) AS name,address
-       FROM user_info WHERE user_id=$1`,
+      `SELECT CONCAT(first_name,' ',last_name) AS name, address
+       FROM user_info
+       WHERE user_id = $1`,
       [userId]
     );
 
-    if (result.rows.length === 0)
-      return res.status(404).send("User info not found");
+    if (result.rows.length === 0) {
+      return res.json({
+        name: "User",
+        address: "Address not set"
+      });
+    }
 
     res.json(result.rows[0]);
 
   } catch (err) {
-
     console.error("Database error:", err);
     res.status(500).json({ message: "Database error" });
-
   }
-
 });
-
 /* -------------------------------------------------------------------------- */
 /*                          CITY RESTAURANTS                                  */
 /* -------------------------------------------------------------------------- */

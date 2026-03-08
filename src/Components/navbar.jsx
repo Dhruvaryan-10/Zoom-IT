@@ -20,7 +20,7 @@ const Navbar = ({ onChangeAddress, onLogout }) => {
         const storedEmail = localStorage.getItem("email");
         if (!storedEmail) return;
 
-        const res = await fetch("http://localhost:5000/api/getUserDetails", {
+        const res = await fetch("https://zoom-it-m6d0.onrender.com/api/getUserDetails", {
           headers: {
             "x-user-email": storedEmail,
           },

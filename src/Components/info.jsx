@@ -46,7 +46,7 @@ const Info = ({ usersEmail }) => {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/saveUserInfo",
+        "https://zoom-it-m6d0.onrender.com/api/saveUserInfo",
         formData,
         {
           withCredentials: true,

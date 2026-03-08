@@ -36,7 +36,7 @@ if (!templateId) {
 
 setRestaurantName(restaurantNameFromState || "Restaurant Menu");
 
-    fetch(`http://localhost:5000/api/menu-items?template_id=${templateId}`)
+    fetch(`https://zoom-it-m6d0.onrender.com/api/menu-items?template_id=${templateId}`)
       .then(res => res.json())
       .then(data => {
 

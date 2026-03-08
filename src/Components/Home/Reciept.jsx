@@ -30,7 +30,7 @@ const ReceiptPage = () => {
 
     if (!userEmail) return;
 
-    fetch("http://localhost:5000/api/getUserDetails", {
+    fetch("https://zoom-it-m6d0.onrender.com/api/getUserDetails", {
       headers: {
         "x-user-email": userEmail,
       },
@@ -82,7 +82,7 @@ const ReceiptPage = () => {
     try {
 
       const response = await fetch(
-        "http://localhost:5000/api/placeOrder",
+        "https://zoom-it-m6d0.onrender.com/api/placeOrder",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
