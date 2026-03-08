@@ -16,8 +16,8 @@ const PORT = process.env.PORT || 5000;
 app.use(
   cors({
     origin: true,
-    credentials: true
-  })
+    credentials: true,
+  }),
 );
 
 app.use(express.json());
@@ -36,7 +36,7 @@ app.get("/", (req, res) => {
 
 const CUISINE_TO_TEMPLATE_MAP = {
   "north indian": 1,
-  "continental": 2,
+  continental: 2,
   italian: 3,
   chinese: 4,
   "south indian": 5,
@@ -75,10 +75,9 @@ app.post("/api/signup", async (req, res) => {
     if (!username || !email || !password)
       return res.status(400).json({ message: "All fields required." });
 
-    const existing = await pool.query(
-      "SELECT id FROM users WHERE email=$1",
-      [email]
-    );
+    const existing = await pool.query("SELECT id FROM users WHERE email=$1", [
+      email,
+    ]);
 
     if (existing.rows.length)
       return res.status(409).json({ message: "Email already exists." });
@@ -87,7 +86,7 @@ app.post("/api/signup", async (req, res) => {
 
     const result = await pool.query(
       "INSERT INTO users (username,email,password) VALUES ($1,$2,$3) RETURNING id",
-      [username, email, hashedPassword]
+      [username, email, hashedPassword],
     );
 
     res.status(201).json({
@@ -108,10 +107,9 @@ app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const result = await pool.query(
-      "SELECT * FROM users WHERE email=$1",
-      [email]
-    );
+    const result = await pool.query("SELECT * FROM users WHERE email=$1", [
+      email,
+    ]);
 
     if (!result.rows.length)
       return res.status(401).json({ message: "User not found." });
@@ -120,8 +118,7 @@ app.post("/api/login", async (req, res) => {
 
     const match = await bcrypt.compare(password, user.password);
 
-    if (!match)
-      return res.status(401).json({ message: "Invalid password." });
+    if (!match) return res.status(401).json({ message: "Invalid password." });
 
     res.json({
       message: "Login successful",
@@ -139,25 +136,23 @@ app.post("/api/login", async (req, res) => {
 
 app.get("/api/getUserDetails", async (req, res) => {
   try {
-
     const email = req.headers["x-user-email"];
 
     if (!email) {
       return res.json({
         name: "User",
-        address: ""
+        address: "",
       });
     }
 
-    const user = await pool.query(
-      "SELECT id FROM users WHERE email=$1",
-      [email]
-    );
+    const user = await pool.query("SELECT id FROM users WHERE email=$1", [
+      email,
+    ]);
 
     if (!user.rows.length) {
       return res.json({
         name: "User",
-        address: ""
+        address: "",
       });
     }
 
@@ -165,13 +160,13 @@ app.get("/api/getUserDetails", async (req, res) => {
 
     const info = await pool.query(
       "SELECT first_name,last_name,address FROM user_info WHERE user_id=$1",
-      [userId]
+      [userId],
     );
 
     if (!info.rows.length) {
       return res.json({
         name: "User",
-        address: ""
+        address: "",
       });
     }
 
@@ -179,18 +174,15 @@ app.get("/api/getUserDetails", async (req, res) => {
 
     res.json({
       name: `${row.first_name || ""} ${row.last_name || ""}`.trim(),
-      address: row.address || ""
+      address: row.address || "",
     });
-
   } catch (err) {
-
     console.error("USER DETAILS ERROR:", err);
 
     res.json({
       name: "User",
-      address: ""
+      address: "",
     });
-
   }
 });
 /* -------------------------------------------------------------------------- */
@@ -199,32 +191,29 @@ app.get("/api/getUserDetails", async (req, res) => {
 
 app.get("/api/home/:city", async (req, res) => {
   try {
-
     const city = req.params.city.toLowerCase();
 
-    const validCities = [
-      "delhi",
-      "kolkata",
-      "chennai",
-      "bangalore",
-      "mumbai"
-    ];
+    const tableMap = {
+      delhi: "delhi",
+      bangalore: "bangalore",
+      chennai: "chennai",
+      kolkata: "kolkata",
+      mumbai: "mumbai",
+    };
 
-    if (!validCities.includes(city)) {
+    const table = tableMap[city];
+
+    if (!table) {
       return res.status(400).json({ message: "Invalid city" });
     }
 
-    // SAFE query (prevents SQL errors)
-    const query = `SELECT * FROM ${city}`;
-
-    const result = await pool.query(query);
+    const result = await pool.query(`SELECT * FROM ${table}`);
 
     if (!result.rows || result.rows.length === 0) {
       return res.json([]);
     }
 
     const processedRows = result.rows.map((restaurant) => {
-
       const rawCuisine =
         restaurant.category ||
         restaurant.cuisine ||
@@ -246,22 +235,18 @@ app.get("/api/home/:city", async (req, res) => {
 
       return {
         ...restaurant,
-        template_id: templateId
+        template_id: templateId,
       };
-
     });
 
     res.json(processedRows);
-
   } catch (err) {
-
     console.error("HOME API ERROR:", err);
 
     res.status(500).json({
       message: "DB error",
-      error: err.message
+      error: err.message,
     });
-
   }
 });
 
@@ -280,7 +265,7 @@ app.get("/api/menu-items", async (req, res) => {
       `SELECT * FROM menu_items
        WHERE template_id=$1
        ORDER BY category,item_name`,
-      [templateId]
+      [templateId],
     );
 
     res.json(result.rows);
