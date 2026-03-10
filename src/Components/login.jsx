@@ -247,7 +247,7 @@ const OAuthButtons = ({ setLoggedInEmail }) => {
 
       const user = jwtDecode(credentialResponse.credential);
 
-      const res = await fetch("https://zoom-it-m6d0.onrender.com/api/googleLogin", {
+      const res = await fetch("${import.meta.env.VITE_API_URL}/api/googleLogin", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
