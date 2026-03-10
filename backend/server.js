@@ -15,9 +15,12 @@ const PORT = process.env.PORT || 5000;
 
 app.use(
   cors({
-    origin: true,
-    credentials: true,
-  })
+  origin: [
+    "http://localhost:5174",
+    "https://zoom-it.vercel.app"
+  ],
+  credentials: true
+})
 );
 
 app.use(express.json());
